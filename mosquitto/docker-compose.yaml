@@ -1,0 +1,33 @@
+# https://github.com/sukesh-ak/setup-mosquitto-with-docker
+version: "3"
+services:
+  mqtt-broker:
+    image: eclipse-mosquitto:2.0
+    ports:
+      - 1883:1883
+      - 9001:9001
+    volumes:
+      - ./MQTT/config:/mosquitto/config:rw
+      - ./MQTT/data:/mosquitto/data:rw
+      - ./MQTT/log:/mosquitto/log:rw
+    networks:
+      - mqtt-network
+
+  
+  data_receiver:
+    build: ./data_receiver
+    networks:
+      - mqtt-network
+    depends_on:
+      mqtt-broker:
+        condition: service_started
+
+  # data_sender:
+  #   build: ./data_sender
+  #   depends_on:
+  #     mqtt-broker:
+  #       condition: service_started
+
+networks:
+  mqtt-network:
+    name: mqtt-network
