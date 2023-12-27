@@ -22,11 +22,11 @@ services:
       mqtt-broker:
         condition: service_started
 
-  # data_sender:
-  #   build: ./data_sender
-  #   depends_on:
-  #     mqtt-broker:
-  #       condition: service_started
+  data_sender:
+    build: ./data_sender
+    depends_on:
+      mqtt-broker:
+        condition: service_started
 
 networks:
   mqtt-network:
