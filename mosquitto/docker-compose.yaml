@@ -24,6 +24,8 @@ services:
 
   # data_sender:
   #   build: ./data_sender
+  #   networks:
+  #     - mqtt-network
   #   depends_on:
   #     mqtt-broker:
   #       condition: service_started
