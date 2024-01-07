@@ -1,8 +1,8 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 
-#define wifi_ssid "MIWIFI_DFf6"
-#define wifi_password "XTHtkbtK"
+#define wifi_ssid "wifi_ssid"
+#define wifi_password "password"
 
 #define mqtt_server "192.168.1.136"
 #define mqtt_port 1883
