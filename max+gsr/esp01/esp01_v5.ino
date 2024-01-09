@@ -92,24 +92,36 @@ void loop() {
   while(!Serial.available()); 
   long HR = Serial.read();
   client.publish(out_topic_hr, String(HR).c_str(), true);
+  // client.publish(out_topic_gsr, "test2", true);
   
   // while(!Serial.available()); 
   // byte GSR[4];
   // long pos = 0;
   // while(Serial.available() && pos < ){
-  // GSR[0] = Serial.read();
-  // GSR[1] = Serial.read();
-  // GSR[2] = Serial.read();
-  // GSR[3] = Serial.read();
-    // pos++;
-  //}
+  //   GSR[0] = Serial.read();
+  //   GSR[1] = Serial.read();
+  //   GSR[2] = Serial.read();
+  //   GSR[3] = Serial.read();
+  //   pos++;
+  // }
+
   // GSR[pos] = '\0';
   // long GSR = 0;
   // while(Serial.available()) {
   //   GSR += Serial.read();
   // }
- // String GSRString = byteArrToString(GSR, sizeof(GSR));
-  // client.publish(out_topic_gsr, String((char *)GSR).c_str(), true);
+  // String GSRString = byteArrToString(GSR, sizeof(GSR));
+  
+  int receivedInt = 0;
+  // while(!Serial.available());
+  while (Serial.available() < sizeof(int));
+  Serial.readBytes((byte*)&receivedInt, sizeof(receivedInt));
+
+  char intString[40];
+  snprintf(intString, sizeof(intString), "%d", receivedInt);
+  
+  //client.publish(out_topic_gsr, String((char *)GSR).c_str(), true);
+  client.publish(out_topic_gsr, intString, true);
   
   delay(1000);
 }
