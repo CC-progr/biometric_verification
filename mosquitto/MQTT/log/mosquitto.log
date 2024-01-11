@@ -36355,3 +36355,23 @@ To fix this, use `chmod 0700 /mosquitto/config/pwfile`.
 1703096871: Client auto-56378CF3-8346-4993-54DC-0E127BB26D69 closed its connection.
 1703096871: mosquitto version 2.0.18 terminating
 1703096871: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1704823466: mosquitto version 2.0.18 starting
+1704823466: Config loaded from /mosquitto/config/mosquitto.conf.
+1704823466: Warning: File /mosquitto/config/pwfile has world readable permissions. Future versions will refuse to load this file.
+To fix this, use `chmod 0700 /mosquitto/config/pwfile`.
+1704823466: Opening ipv4 listen socket on port 1883.
+1704823466: Opening ipv6 listen socket on port 1883.
+1704823466: mosquitto version 2.0.18 running
+1704823467: New connection from 172.18.0.3:42029 on port 1883.
+1704823467: New client connected from 172.18.0.3:42029 as auto-F1C1226F-4BDD-B376-8CAF-1990B9592E6F (p2, c1, k60, u'user1').
+1704823663: New connection from 172.18.0.1:53970 on port 1883.
+1704823663: New client connected from 172.18.0.1:53970 as ESP8266Client (p2, c1, k15, u'user1').
+1704823783: Client ESP8266Client has exceeded timeout, disconnecting.
+1704823900: New connection from 172.18.0.1:33484 on port 1883.
+1704823900: New client connected from 172.18.0.1:33484 as ESP8266Client (p2, c1, k15, u'user1').
+1704823927: Client ESP8266Client has exceeded timeout, disconnecting.
+1704823947: New connection from 172.18.0.1:58284 on port 1883.
+1704823947: New client connected from 172.18.0.1:58284 as ESP8266Client (p2, c1, k15, u'user1').
+1704823969: Client ESP8266Client has exceeded timeout, disconnecting.
+1704825266: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1704902863: Saving in-memory database to /mosquitto/data//mosquitto.db.
