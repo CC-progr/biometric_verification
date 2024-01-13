@@ -36375,3 +36375,97 @@ To fix this, use `chmod 0700 /mosquitto/config/pwfile`.
 1704823969: Client ESP8266Client has exceeded timeout, disconnecting.
 1704825266: Saving in-memory database to /mosquitto/data//mosquitto.db.
 1704902863: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1704992116: mosquitto version 2.0.18 starting
+1704992116: Config loaded from /mosquitto/config/mosquitto.conf.
+1704992116: Warning: File /mosquitto/config/pwfile has world readable permissions. Future versions will refuse to load this file.
+To fix this, use `chmod 0700 /mosquitto/config/pwfile`.
+1704992116: Opening ipv4 listen socket on port 1883.
+1704992116: Opening ipv6 listen socket on port 1883.
+1704992116: mosquitto version 2.0.18 running
+1704992117: New connection from 172.18.0.3:49249 on port 1883.
+1704992117: New client connected from 172.18.0.3:49249 as auto-07D6D300-D5A7-4A1C-1A0E-46F8193259C0 (p2, c1, k60, u'user1').
+1704992121: New connection from 172.18.0.1:40634 on port 1883.
+1704992121: New client connected from 172.18.0.1:40634 as ESP8266Client (p2, c1, k15, u'user1').
+1704992145: Client ESP8266Client has exceeded timeout, disconnecting.
+1704992200: New connection from 172.18.0.1:59474 on port 1883.
+1704992200: New client connected from 172.18.0.1:59474 as ESP8266Client (p2, c1, k15, u'user1').
+1704992332: New connection from 172.18.0.1:55668 on port 1883.
+1704992332: Client ESP8266Client already connected, closing old connection.
+1704992332: New client connected from 172.18.0.1:55668 as ESP8266Client (p2, c1, k15, u'user1').
+1704992895: Client ESP8266Client has exceeded timeout, disconnecting.
+1704992919: New connection from 172.18.0.1:52314 on port 1883.
+1704992919: New client connected from 172.18.0.1:52314 as ESP8266Client (p2, c1, k15, u'user1').
+1704993249: Client ESP8266Client has exceeded timeout, disconnecting.
+1704993512: New connection from 172.18.0.1:36910 on port 1883.
+1704993512: New client connected from 172.18.0.1:36910 as ESP8266Client (p2, c1, k15, u'user1').
+1704993537: Client ESP8266Client has exceeded timeout, disconnecting.
+1704993578: New connection from 172.18.0.1:57210 on port 1883.
+1704993578: New client connected from 172.18.0.1:57210 as ESP8266Client (p2, c1, k15, u'user1').
+1704993916: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1704994227: Client ESP8266Client has exceeded timeout, disconnecting.
+1704994238: New connection from 172.18.0.1:57032 on port 1883.
+1704994238: New client connected from 172.18.0.1:57032 as ESP8266Client (p2, c1, k15, u'user1').
+1704994359: Client ESP8266Client has exceeded timeout, disconnecting.
+1704994372: New connection from 172.18.0.1:34134 on port 1883.
+1704994372: New client connected from 172.18.0.1:34134 as ESP8266Client (p2, c1, k15, u'user1').
+1704994443: Client ESP8266Client has exceeded timeout, disconnecting.
+1704994460: New connection from 172.18.0.1:51058 on port 1883.
+1704994460: New client connected from 172.18.0.1:51058 as ESP8266Client (p2, c1, k15, u'user1').
+1704994533: Client ESP8266Client has exceeded timeout, disconnecting.
+1704994566: New connection from 172.18.0.1:43610 on port 1883.
+1704994566: New client connected from 172.18.0.1:43610 as ESP8266Client (p2, c1, k15, u'user1').
+1704994767: Client ESP8266Client has exceeded timeout, disconnecting.
+1704994810: New connection from 172.18.0.1:34922 on port 1883.
+1704994810: New client connected from 172.18.0.1:34922 as ESP8266Client (p2, c1, k15, u'user1').
+1704994921: Client auto-07D6D300-D5A7-4A1C-1A0E-46F8193259C0 closed its connection.
+1704994922: New connection from 172.18.0.3:36367 on port 1883.
+1704994922: New client connected from 172.18.0.3:36367 as auto-184E6DDB-EE48-0E68-99E5-E5BBD4CF7E12 (p2, c1, k60, u'user1').
+1704994929: Client ESP8266Client has exceeded timeout, disconnecting.
+1704994960: New connection from 172.18.0.1:56456 on port 1883.
+1704994960: New client connected from 172.18.0.1:56456 as ESP8266Client (p2, c1, k15, u'user1').
+1704995717: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1704995729: New connection from 172.18.0.1:56932 on port 1883.
+1704995729: Client ESP8266Client already connected, closing old connection.
+1704995729: New client connected from 172.18.0.1:56932 as ESP8266Client (p2, c1, k15, u'user1').
+1704996219: Client ESP8266Client has exceeded timeout, disconnecting.
+1704996240: New connection from 172.18.0.1:45414 on port 1883.
+1704996240: New client connected from 172.18.0.1:45414 as ESP8266Client (p2, c1, k15, u'user1').
+1704996490: Client auto-184E6DDB-EE48-0E68-99E5-E5BBD4CF7E12 closed its connection.
+1704996496: New connection from 172.18.0.3:38511 on port 1883.
+1704996496: New client connected from 172.18.0.3:38511 as auto-C71D3217-C8BB-8381-A629-48AFD91A9FDC (p2, c1, k60, u'user1').
+1704996507: Client ESP8266Client has exceeded timeout, disconnecting.
+1704996512: New connection from 172.18.0.1:46708 on port 1883.
+1704996512: New client connected from 172.18.0.1:46708 as ESP8266Client (p2, c1, k15, u'user1').
+1704996585: New connection from 172.18.0.1:50124 on port 1883.
+1704996585: Client ESP8266Client already connected, closing old connection.
+1704996585: New client connected from 172.18.0.1:50124 as ESP8266Client (p2, c1, k15, u'user1').
+1704996609: Client ESP8266Client has exceeded timeout, disconnecting.
+1704996675: New connection from 172.18.0.1:38930 on port 1883.
+1704996675: New client connected from 172.18.0.1:38930 as ESP8266Client (p2, c1, k15, u'user1').
+1704996699: Client ESP8266Client has exceeded timeout, disconnecting.
+1704996760: New connection from 172.18.0.1:35018 on port 1883.
+1704996760: New client connected from 172.18.0.1:35018 as ESP8266Client (p2, c1, k15, u'user1').
+1704996783: Client ESP8266Client has exceeded timeout, disconnecting.
+1704996830: New connection from 172.18.0.1:48716 on port 1883.
+1704996830: New client connected from 172.18.0.1:48716 as ESP8266Client (p2, c1, k15, u'user1').
+1704996957: Client ESP8266Client has exceeded timeout, disconnecting.
+1704996977: New connection from 172.18.0.1:55094 on port 1883.
+1704996977: New client connected from 172.18.0.1:55094 as ESP8266Client (p2, c1, k15, u'user1').
+1704997077: Client ESP8266Client has exceeded timeout, disconnecting.
+1704997465: New connection from 172.18.0.1:46446 on port 1883.
+1704997465: New client connected from 172.18.0.1:46446 as ESP8266Client (p2, c1, k15, u'user1').
+1704997487: Client ESP8266Client has exceeded timeout, disconnecting.
+1704997515: New connection from 172.18.0.1:48686 on port 1883.
+1704997515: New client connected from 172.18.0.1:48686 as ESP8266Client (p2, c1, k15, u'user1').
+1704997520: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1704997727: Client ESP8266Client has exceeded timeout, disconnecting.
+1704999321: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1705001122: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1705002050: New connection from 172.18.0.1:47068 on port 1883.
+1705002050: New client connected from 172.18.0.1:47068 as ESP8266Client (p2, c1, k15, u'user1').
+1705002064: Client auto-C71D3217-C8BB-8381-A629-48AFD91A9FDC closed its connection.
+1705002066: New connection from 172.18.0.3:42523 on port 1883.
+1705002066: New client connected from 172.18.0.3:42523 as auto-E109D198-E06A-2043-913B-892A153C05CC (p2, c1, k60, u'user1').
+1705002077: Client ESP8266Client has exceeded timeout, disconnecting.
+1705002923: Saving in-memory database to /mosquitto/data//mosquitto.db.
+1705003302: Client auto-E109D198-E06A-2043-913B-892A153C05CC closed its connection.
