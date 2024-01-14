@@ -13,4 +13,5 @@ def on_message_save(client, userdata, message):
 
 # subscribe.callback(on_message_save, "/HR/sensor1", hostname="mqtt-broker",auth={"username": "user1", "password": "1234"}, port=1883)
 # subscribe.callback(on_message_save, "/GSR/sensor1", hostname="mqtt-broker",auth={"username": "user1", "password": "1234"}, port=1883)
-subscribe.callback(on_message_save, "/user/#", hostname="mqtt-broker",auth={"username": "user1", "password": "1234"}, port=1883)
+# subscribe.callback(on_message_save, "/user/#", hostname="mqtt-broker",auth={"username": "user1", "password": "1234"}, port=1883)
+subscribe.callback(on_message_save, "/eps-L1/#", hostname="mqtt-broker",auth={"username": "user1", "password": "1234"}, port=1883)
