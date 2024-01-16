@@ -1,5 +1,9 @@
 #include "Wire.h"
 #include <LiquidCrystal_I2C.h>
+#include <string>
+#include <iostream>
+#include <cstdlib>
+#include <ESP32Servo.h>
  
 #define WIRE_SPEED 3400000    
 
@@ -35,22 +39,29 @@ LiquidCrystal_I2C lcd(0x27,16,2);
 #include <WiFi.h>
 #include <PubSubClient.h>
 
-#define WIFI_SSID "caca2"
-#define WIFI_PASSWORD "cacacaca"
+// #define WIFI_SSID "caca2"
+// #define WIFI_PASSWORD "cacacaca"
 
-// #define WIFI_SSID "PapitaC"
-// #define WIFI_PASSWORD "wpgr3523"
+#define WIFI_SSID "PapitaC"
+#define WIFI_PASSWORD "wpgr3523"
 
 #define MQTT_USER "user1"
 #define MQTT_PASS "1234"
 #define MQTT_BROKER "192.168.65.105"
 #define MQTT_PORT 1883
 
-#define SENSOR1_TOPIC "/location/sensor1"
-#define SENSOR2_TOPIC "/location/sensor2"
+// #define SENSOR1_TOPIC "/location/sensor1"
+// #define SENSOR2_TOPIC "/location/sensor2"
 
-#define USER_DATA1_TOPIC "/location/sensor1"
-#define USER_DATA2_TOPIC "/location/sensor2"
+// #define USER_DATA1_TOPIC "/user/data/gsr"
+// #define USER_DATA2_TOPIC "/user/data/heartRate"
+
+#define SENSOR1_TOPIC "/eps-L1/location/sensor1"
+#define SENSOR2_TOPIC "/eps-L1/location/sensor2"
+
+#define USER_HR_TOPIC "/eps-L1/user/HR"
+#define USER_GSR_TOPIC "/eps-L1/user/GSR"
+#define USER_PREDICTION_TOPIC "/eps-L1/user/prediction"
 
 // #define WIFI_TASK_PRIORITY 1
 // #define LCD_TASK_PRIORITY 2
@@ -61,14 +72,29 @@ SemaphoreHandle_t i2cSemaphore;
 
 SemaphoreHandle_t sensor1Mutex;
 SemaphoreHandle_t sensor2Mutex;
-int8_t sensor1 = 0;
-int8_t sensor2 = 0;
+long sensor1;
+long sensor2;
+
+long tmp_diff_center = 1;
+long tmp_diff_close_right = 5;
+long tmp_diff_far_right = 7;
+long tmp_diff_close_left = -4;
+long tmp_diff_far_left = -9;
 // int8_t distance = 0; //sensor1 - sensor2
 
-SemaphoreHandle_t user_data1Mutex;
-SemaphoreHandle_t user_data2Mutex;
-int8_t user_data1 = 0;
-int8_t user_data2 = 0;
+String tmp_GSR = "291"; 
+String tmp_HR = "91";
+String tmp_user1 = "unkown";
+String tmp_user2 = "ruben";
+
+SemaphoreHandle_t gsrMutex;
+SemaphoreHandle_t heartRateMutex;
+String gsr = "0";
+String hr = "0";
+String username = "unknown";
+
+Servo miServo;
+const int pinServo = 23;
 
 SemaphoreHandle_t LeftValueMutex;
 SemaphoreHandle_t CenterValueMutex;
@@ -79,6 +105,16 @@ int8_t RightValue = 10;
 
 WiFiClient espClient;
 PubSubClient client;
+
+void wifiTask(void* pvParameters);
+void ledTask(void* pvParameters);
+void ledFarLeft();
+void ledCloseLeft();
+void ledCenter();
+void ledCloseRight();
+void ledFarRight();
+void lcdTask(void* pvParameters);
+
 
 void setup2(){
   Serial.begin(115200);
@@ -105,13 +141,16 @@ void setup2(){
   lcd.init();
   lcd.backlight();
 
+  miServo.attach(pinServo);
+  miServo.write(0);
+
   // Create the semaphores
   i2cSemaphore = xSemaphoreCreateMutex();
   sensor1Mutex = xSemaphoreCreateMutex();
   sensor2Mutex = xSemaphoreCreateMutex();
 
-  user_data1Mutex = xSemaphoreCreateMutex();
-  user_data2Mutex = xSemaphoreCreateMutex();
+  gsrMutex = xSemaphoreCreateMutex();
+  heartRateMutex = xSemaphoreCreateMutex();
 
   xSemaphoreGive(i2cSemaphore);
 
@@ -119,10 +158,8 @@ void setup2(){
   // CenterValueMutex = xSemaphoreCreateMutex();
   // RightValueMutex = xSemaphoreCreateMutex();
 
-  // client = mqttClient(espClient);
-  // client.setClient(espClient);
-
-  xTaskCreate(wifiTask, "wifiTask", 2048, NULL, 0, NULL); //1024
+  // xTaskCreate(tmpTask, "tmpTask", 2048, NULL, 0, NULL); //1024
+  // xTaskCreate(wifiTask, "wifiTask", 2048, NULL, 0, NULL); //1024
   xTaskCreate(lcdTask, "LCDTask", 2048, NULL, 0, NULL); //1024
   xTaskCreate(ledTask, "LEDTask", 2048, NULL, 0, NULL); //1024
 }
@@ -133,7 +170,6 @@ void reconnect() {
     Serial.print("Attempting MQTT connection...");
     // Attempt to connect
     // If you do not want to use a username and password, change next line to
-    // if (client.connect("ESP8266Client")) {
     if (client.connect("ESP32", MQTT_USER, MQTT_PASS)) {
       Serial.println("connected");
     } else {
@@ -146,12 +182,18 @@ void reconnect() {
   }
 }
 
+void tmpTask(void* pvParameters) {
+  (void) pvParameters;
+}
+
 void wifiTask(void* pvParameters) {
   // Connect to WiFi
 
   (void) pvParameters;
+  client.setClient(espClient);
+  client.setServer(MQTT_BROKER, MQTT_PORT);
+  client.setCallback(callback);
 
-  Serial.println("Connecting to WiFi ");
   Serial.println(WIFI_SSID);
   for (;;) {
     while (WiFi.status() != WL_CONNECTED) {
@@ -159,52 +201,91 @@ void wifiTask(void* pvParameters) {
       WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
       vTaskDelay(500);
     }
-    Serial.println("");
-    Serial.println("WiFi connected");
-    Serial.println("IP address: ");
-    Serial.println(WiFi.localIP());
+    // Connect to MQTT broker
+    while (!client.connected()) {
+      if (client.connect("ESP32", MQTT_USER, MQTT_PASS)) {
+        Serial.println("Connected to MQTT broker");
+        // client.subscribe("/location/sensor1");
+        // client.subscribe("/location/sensor2");
+        // client.subscribe("/location/+");
+        client.subscribe("/eps-L1/+");
+      } else {
+        Serial.println("Failed to connect to MQTT broker. Retrying in 5 seconds...");
+        vTaskDelay(5000);
+      }
+
+    }
+
+      // Handle MQTT messages or other WiFi-related tasks here
+      client.loop();
+      vTaskDelay(100);  // Adjust as needed
+    // }
   }
-  
-/*
-// Connect to MQTT broker
-//   client.setServer(MQTT_BROKER, MQTT_PORT);
-//   client.setCallback(callback);
-
-//   Serial.println("Connecting to MQTT broker...");
-//   while (!client.connected()) {
-//     if (client.connect("ESP32Client")) {
-//       Serial.println("Connected to MQTT broker");
-//       client.subscribe("/location/sensor1");
-//       client.subscribe("/location/sensor2");
-//       client.subscribe("/location/+");
-//     } else {
-//       Serial.println("Failed to connect to MQTT broker. Retrying in 5 seconds...");
-//       vTaskDelay(5000);
-//       reconnect();
-//     }
-//   }
-
-//   for (;;) {
-//     // Handle MQTT messages or other WiFi-related tasks here
-//     client.loop();
-//     vTaskDelay(100);  // Adjust as needed
-//   }
-*/
-  
+   
   
 }
 
 void callback(char* topic, byte* payload, unsigned int length) {
   Serial.println("Message arrived on topic: " + String(topic));
-  if (strcmp(topic, "/location/sensor1") == 0) {
-    sensor1 = atoi((char*)payload);
+  // if (strcmp(topic, "/location/sensor1") == 0) {
+    if (strcmp(topic, "/eps-L1/location/sensor1") == 0) {
+    // sensor1 = (int8_t)*payload;
+
+    String message;
+    for(int i=0; i<length; i++) {
+      // Serial.print((char)payload[i]);
+      message += (char)payload[i];
+    }
+
+    // Serial.print(message);
+
+    sensor1 = message.toInt();
     Serial.print("Sensor 1 value: ");
     Serial.println(sensor1);
-  } else if (strcmp(topic, "/location/sensor2") == 0) {
-    sensor2 = atoi((char*)payload);
+  // } else if (strcmp(topic, "/location/sensor2") == 0) {
+    } else if (strcmp(topic, "/eps-L1/location/sensor2") == 0) {
+
+    String message;
+    for(int i=0; i<length; i++) {
+      // Serial.print((char)payload[i]);
+      message += (char)payload[i];
+    }
+
+    // Serial.print(message);
+
+    // sensor2 = (int8_t)*payload;
+    sensor2 = message.toInt();
     Serial.print("Sensor 2 value: ");
     Serial.println(sensor2);
-  }
+  } else if (strcmp(topic, "/eps-L1/user/HR") == 0) {
+    String message;
+    for(int i=0; i<length; i++) {
+      // Serial.print((char)payload[i]);
+      message += (char)payload[i];
+    }
+    hr = message;
+    Serial.print("HR value: ");
+    Serial.println(hr);
+  } else if (strcmp(topic, "/eps-L1/user/GSR") == 0) {
+    String message;
+    for(int i=0; i<length; i++) {
+      // Serial.print((char)payload[i]);
+      message += (char)payload[i];
+    }
+    gsr = message;
+    Serial.print("GSR value: ");
+    Serial.println(gsr);
+  } else if (strcmp(topic, "/eps-L1/user/prediction") == 0) {
+    String message;
+    for(int i=0; i<length; i++) {
+      // Serial.print((char)payload[i]);
+      message += (char)payload[i];
+    }
+    username = message;
+    Serial.print("username value: ");
+    Serial.println(username);
+  } //
+  
 }
 
 void ledTask(void* pvParameters) {
@@ -218,54 +299,120 @@ void ledTask(void* pvParameters) {
   //   }
   //   xSemaphoreGive(sensor1);
   // }
+// ---------------------------
+  // for(;;) {
+  //   if(LeftValue < 0) { // distance
+  //     ledLeft();
+  //     vTaskDelay(500);
+  //   } // else 
 
-  for(;;) {
-    if(LeftValue < 0) { // distance
-      ledLeft();
-      vTaskDelay(500);
-    } // else 
+  //   if(CenterValue == 0) {
+  //     ledCenter();
+  //     vTaskDelay(500);
+  //   }
 
-    if(CenterValue == 0) {
-      ledCenter();
-      vTaskDelay(500);
-    }
+  //   if(RightValue > 0) {
+  //     ledRight();
+  //     vTaskDelay(500);
+  //   }
+  // }
+  // --------------------
 
-    if(RightValue > 0) {
-      ledRight();
-      vTaskDelay(500);
-    }
+  long distance = tmp_diff_close_right;//sensor1 - sensor2
+    for(;;) {
+      if(distance < -5) { // distance
+        ledFarLeft();
+        vTaskDelay(500);
+      }  else if(distance >= -5 && distance <= -2) { // distance
+        ledCloseLeft();
+        vTaskDelay(500);
+      } else if(distance >= -1 && distance <= 1) { // distance
+        ledCenter();
+        vTaskDelay(500);
+      } else if(distance >= 1 && distance <= 5) { // distance
+        ledCloseRight();
+        vTaskDelay(500);
+      } else {// distance > 5
+        ledFarRight();
+        vTaskDelay(500);
+      }
   }
 }
 
-void lcdTask(void* pvParameters) {
+void ledFarLeft() {
 
-  (void) pvParameters;
-  //collect user verification data
-  // if (xSemaphoreTake(user_data1, portMAX_DELAY)) {
-  //   if (xSemaphoreTake(user_data2, portMAX_DELAY)) {
-  //     int8_t user_data = userdata1 - userdata2;
-  //     xSemaphoreGive(user_data2);
-  //   }
-  //   xSemaphoreGive(user_data1);
-  // }
+  // if (xSemaphoreTake(i2cSemaphore, portMAX_DELAY)) {
 
-  for(;;) {
-    if(LeftValue < 0) { //user_data
-      LCDLeft(LeftValue);
-      vTaskDelay(500);
-    }
+    Wire.beginTransmission(MCPADDRESS);
+    Wire.write(GPIOB);        // B Register
+    Wire.write(0x00);
+    Wire.endTransmission();   // Todos los pins a 1 --> todos encendidos
 
-    if(CenterValue == 0) {
-      LCDCenter(CenterValue);
-      vTaskDelay(500);
-    }
+    Wire.beginTransmission(MCPADDRESS);
+    Wire.write(GPIOA);        // A Register
+    Wire.write(0xC0);
+    Wire.endTransmission();   // Todos los pins a 0 --> todos apagados
+    vTaskDelay(1000);
 
-    if(RightValue > 0) {
-      LCDRight(RightValue);
-      vTaskDelay(500);
-    }
+    // xSemaphoreGive(i2cSemaphore);
+  // }  
+}
 
-  }
+void ledCloseLeft() {
+
+  // if (xSemaphoreTake(i2cSemaphore, portMAX_DELAY)) {
+
+    Wire.beginTransmission(MCPADDRESS);
+    Wire.write(GPIOB);        // B Register
+    Wire.write(0x00);
+    Wire.endTransmission();   // Todos los pins a 1 --> todos encendidos
+
+    Wire.beginTransmission(MCPADDRESS);
+    Wire.write(GPIOA);        // A Register
+    Wire.write(0x30);
+    Wire.endTransmission();   // Todos los pins a 0 --> todos apagados
+    vTaskDelay(1000);
+
+    // xSemaphoreGive(i2cSemaphore);
+  // }  
+}
+
+void ledCloseRight() {
+
+  // if (xSemaphoreTake(i2cSemaphore, portMAX_DELAY)) {
+
+    Wire.beginTransmission(MCPADDRESS);
+    Wire.write(GPIOB);        // B Register
+    Wire.write(0x06);
+    Wire.endTransmission();   // Todos los pins a 1 --> todos encendidos
+
+    Wire.beginTransmission(MCPADDRESS);
+    Wire.write(GPIOA);        // A Register
+    Wire.write(0x00);
+    Wire.endTransmission();   // Todos los pins a 0 --> todos apagados
+    vTaskDelay(1000);
+
+    // xSemaphoreGive(i2cSemaphore);
+  // }  
+}
+
+void ledFarRight() {
+
+  // if (xSemaphoreTake(i2cSemaphore, portMAX_DELAY)) {
+
+    Wire.beginTransmission(MCPADDRESS);
+    Wire.write(GPIOB);        // B Register
+    Wire.write(0x18);
+    Wire.endTransmission();   // Todos los pins a 1 --> todos encendidos
+
+    Wire.beginTransmission(MCPADDRESS);
+    Wire.write(GPIOA);        // A Register
+    Wire.write(0x00);
+    Wire.endTransmission();   // Todos los pins a 0 --> todos apagados
+    vTaskDelay(1000);
+
+    // xSemaphoreGive(i2cSemaphore);
+  // }  
 }
 
 void ledLeft() {
@@ -318,6 +465,87 @@ void ledRight(){
     // xSemaphoreGive(i2cSemaphore);
   // }  
 }
+
+void lcdTask(void* pvParameters) {
+
+  (void) pvParameters;
+  //collect user verification data
+  // if (xSemaphoreTake(user_data1, portMAX_DELAY)) {
+  //   if (xSemaphoreTake(user_data2, portMAX_DELAY)) {
+  //     int8_t user_data = userdata1 - userdata2;
+  //     xSemaphoreGive(user_data2);
+  //   }
+  //   xSemaphoreGive(user_data1);
+  // }
+
+  // for(;;) {
+  //   if(LeftValue < 0) { //user_data
+  //     LCDLeft(LeftValue);
+  //     vTaskDelay(500);
+  //   }
+
+  //   if(CenterValue == 0) {
+  //     LCDCenter(CenterValue);
+  //     vTaskDelay(500);
+  //   }
+
+  //   if(RightValue > 0) {
+  //     LCDRight(RightValue);
+  //     vTaskDelay(500);
+  //   }
+  // }
+  
+  // -----------------
+  // semaforos aqui
+  for(;;) {
+    //TODO las variables las cojo aqui o antes?
+    String username = tmp_user2;
+    String hr = tmp_HR;
+    String gsr = tmp_GSR;
+
+    printLCD(username, hr, gsr);
+  }
+}
+
+void printLCD(String username, String hr, String gsr) {
+    // lcd.setCursor(0,0);
+    // lcd.print("HR: ");
+    // lcd.print(hr);
+    // lcd.setCursor(0,1);
+    // lcd.print("GSR: ");
+    // lcd.print(gsr);
+    lcd.setCursor(0,0);
+    lcd.print("HR: " + hr + " GSR: " + gsr);
+    // vTaskDelay(1000);
+    // lcd.clear();
+    if(username == "unkown") {
+      // lcd.setCursor(0,0);
+      // lcd.print("E: User");
+      lcd.setCursor(0,1);
+      // lcd.print("unknown!");
+      lcd.print("E: User unknown!");
+      moveServo(0);
+      vTaskDelay(1000);
+      lcd.clear();
+    } else {
+      // lcd.setCursor(0,0);
+      // lcd.print(username);
+      lcd.setCursor(0,1);
+      // lcd.print("accepted");
+      lcd.print(username + " accepted");
+      moveServo(180);
+      vTaskDelay(1000);
+      lcd.clear();
+    }
+    vTaskDelay(1000);
+}
+
+void moveServo(int degrees) {
+
+  miServo.write(degrees);
+
+}
+
 
 void LCDLeft(int8_t LeftValue) {
 
@@ -379,7 +607,7 @@ void loop()
 void loop2() {
   //empty
 }
-
+// ---------------------
 void setupSec() {
   Serial.begin(115200); //9600bps
   Wire.setClock(WIRE_SPEED); // I2C Bus speed
