@@ -42,12 +42,15 @@ LiquidCrystal_I2C lcd(0x27,16,2);
 // #define WIFI_SSID "caca2"
 // #define WIFI_PASSWORD "cacacaca"
 
-#define WIFI_SSID "PapitaC"
-#define WIFI_PASSWORD "wpgr3523"
+// #define WIFI_SSID "PapitaC"
+// #define WIFI_PASSWORD "wpgr3523"
+
+#define WIFI_SSID "Ruben"
+#define WIFI_PASSWORD "123456789"
 
 #define MQTT_USER "user1"
 #define MQTT_PASS "1234"
-#define MQTT_BROKER "192.168.65.105"
+#define MQTT_BROKER "192.168.43.105"
 #define MQTT_PORT 1883
 
 // #define SENSOR1_TOPIC "/location/sensor1"
@@ -106,6 +109,7 @@ int8_t RightValue = 10;
 WiFiClient espClient;
 PubSubClient client;
 
+void servoTask(void* pvParameters);
 void wifiTask(void* pvParameters);
 void ledTask(void* pvParameters);
 void ledFarLeft();
@@ -158,8 +162,8 @@ void setup2(){
   // CenterValueMutex = xSemaphoreCreateMutex();
   // RightValueMutex = xSemaphoreCreateMutex();
 
-  // xTaskCreate(tmpTask, "tmpTask", 2048, NULL, 0, NULL); //1024
-  // xTaskCreate(wifiTask, "wifiTask", 2048, NULL, 0, NULL); //1024
+  // xTaskCreate(servoTask, "servoTask", 2048, NULL, 0, NULL); //1024
+  xTaskCreate(wifiTask, "wifiTask", 2048, NULL, 0, NULL); //1024
   xTaskCreate(lcdTask, "LCDTask", 2048, NULL, 0, NULL); //1024
   xTaskCreate(ledTask, "LEDTask", 2048, NULL, 0, NULL); //1024
 }
@@ -182,9 +186,16 @@ void reconnect() {
   }
 }
 
-void tmpTask(void* pvParameters) {
+void servoTask(void* pvParameters) {
   (void) pvParameters;
+  long distance = sensor2 - sensor1;
+  if(username != "unknown" && (distance >= -3 && distance <= 3)) {
+    moveServo(90);
+  } else {
+    moveServo(0);
+  }
 }
+
 
 void wifiTask(void* pvParameters) {
   // Connect to WiFi
@@ -198,6 +209,7 @@ void wifiTask(void* pvParameters) {
   for (;;) {
     while (WiFi.status() != WL_CONNECTED) {
       Serial.println("Connecting to WiFi...");
+      Serial.println(WiFi.waitForConnectResult());
       WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
       vTaskDelay(500);
     }
@@ -208,7 +220,7 @@ void wifiTask(void* pvParameters) {
         // client.subscribe("/location/sensor1");
         // client.subscribe("/location/sensor2");
         // client.subscribe("/location/+");
-        client.subscribe("/eps-L1/+");
+        client.subscribe("/eps-L1/#");
       } else {
         Serial.println("Failed to connect to MQTT broker. Retrying in 5 seconds...");
         vTaskDelay(5000);
@@ -243,7 +255,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
     Serial.print("Sensor 1 value: ");
     Serial.println(sensor1);
   // } else if (strcmp(topic, "/location/sensor2") == 0) {
-    } else if (strcmp(topic, "/eps-L1/location/sensor2") == 0) {
+    } //else 
+    if (strcmp(topic, "/eps-L1/location/sensor2") == 0) {
 
     String message;
     for(int i=0; i<length; i++) {
@@ -257,7 +270,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
     sensor2 = message.toInt();
     Serial.print("Sensor 2 value: ");
     Serial.println(sensor2);
-  } else if (strcmp(topic, "/eps-L1/user/HR") == 0) {
+  } //else 
+  if (strcmp(topic, "/eps-L1/user/HR") == 0) {
     String message;
     for(int i=0; i<length; i++) {
       // Serial.print((char)payload[i]);
@@ -266,7 +280,8 @@ void callback(char* topic, byte* payload, unsigned int length) {
     hr = message;
     Serial.print("HR value: ");
     Serial.println(hr);
-  } else if (strcmp(topic, "/eps-L1/user/GSR") == 0) {
+  } //else
+   if (strcmp(topic, "/eps-L1/user/GSR") == 0) {
     String message;
     for(int i=0; i<length; i++) {
       // Serial.print((char)payload[i]);
@@ -275,14 +290,15 @@ void callback(char* topic, byte* payload, unsigned int length) {
     gsr = message;
     Serial.print("GSR value: ");
     Serial.println(gsr);
-  } else if (strcmp(topic, "/eps-L1/user/prediction") == 0) {
+  } //else
+   if (strcmp(topic, "/eps-L1/user/prediction") == 0) {
     String message;
     for(int i=0; i<length; i++) {
       // Serial.print((char)payload[i]);
       message += (char)payload[i];
     }
     username = message;
-    Serial.print("username value: ");
+    Serial.print("prediction value: ");
     Serial.println(username);
   } //
   
@@ -318,18 +334,27 @@ void ledTask(void* pvParameters) {
   // }
   // --------------------
 
-  long distance = tmp_diff_close_right;//sensor1 - sensor2
+  
     for(;;) {
-      if(distance < -5) { // distance
+      // centro: [-3, 3]
+      // closeLeft: [-9, -4]
+      // farLeft: (-inf, -10]
+      // closeRight: [4, 9]
+      // farRight: [10, inf)
+      long distance = sensor2 - sensor1;//sensor1 - sensor2; //tmp_diff_close_right;//sensor1 - sensor2
+      Serial.println("distance: ");
+      Serial.println(distance);
+      // if(distance < -5) { // distance
+      if(distance < -10) {
         ledFarLeft();
         vTaskDelay(500);
-      }  else if(distance >= -5 && distance <= -2) { // distance
+      }  else if(distance >= -10 && distance <= -4) { // distance
         ledCloseLeft();
         vTaskDelay(500);
-      } else if(distance >= -1 && distance <= 1) { // distance
+      } else if(distance >= -3 && distance <= 3) { // distance
         ledCenter();
         vTaskDelay(500);
-      } else if(distance >= 1 && distance <= 5) { // distance
+      } else if(distance >= 4 && distance <= 10) { // distance
         ledCloseRight();
         vTaskDelay(500);
       } else {// distance > 5
@@ -499,9 +524,9 @@ void lcdTask(void* pvParameters) {
   // semaforos aqui
   for(;;) {
     //TODO las variables las cojo aqui o antes?
-    String username = tmp_user2;
-    String hr = tmp_HR;
-    String gsr = tmp_GSR;
+    // String username = tmp_user2;
+    // String hr = tmp_HR;
+    // String gsr = tmp_GSR;
 
     printLCD(username, hr, gsr);
   }
@@ -509,7 +534,7 @@ void lcdTask(void* pvParameters) {
 
 void printLCD(String username, String hr, String gsr) {
     // lcd.setCursor(0,0);
-    // lcd.print("HR: ");
+    // lcd.print("HR: ");zx
     // lcd.print(hr);
     // lcd.setCursor(0,1);
     // lcd.print("GSR: ");
@@ -518,7 +543,7 @@ void printLCD(String username, String hr, String gsr) {
     lcd.print("HR: " + hr + " GSR: " + gsr);
     // vTaskDelay(1000);
     // lcd.clear();
-    if(username == "unkown") {
+    if(username == "unknown") {
       // lcd.setCursor(0,0);
       // lcd.print("E: User");
       lcd.setCursor(0,1);
@@ -532,8 +557,12 @@ void printLCD(String username, String hr, String gsr) {
       // lcd.print(username);
       lcd.setCursor(0,1);
       // lcd.print("accepted");
+      
       lcd.print(username + " accepted");
-      moveServo(180);
+      long distance = sensor2 - sensor1;
+      if((distance >= -3 && distance <= 3)) {
+        moveServo(90);
+      }
       vTaskDelay(1000);
       lcd.clear();
     }
