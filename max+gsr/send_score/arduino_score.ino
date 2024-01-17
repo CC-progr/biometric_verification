@@ -33,6 +33,7 @@ int sensorValue;
 // PREDICT
 static bool debug_nn = false;
 const char* highestLabel;
+int32_t highestScore = 0;
 
 void setup()
 {
@@ -162,6 +163,7 @@ void loop()
       }
       
       highestLabel = result.classification[maxLabel].label;
+      highestScore = (result.classification[maxLabel].value) * 100;
 
       Serial.print("PREDICTION: ");
       Serial.println(highestLabel);
@@ -177,13 +179,16 @@ void loop()
 
     Serial.println("************");
 
-    Serial1.write((byte*)&heartRate, sizeof(heartRate));
+    Serial1.write(heartRate);
     delay(500);
 
     Serial1.write((byte*)&sensorValue, sizeof(sensorValue));
     delay(500);
 
     Serial1.write(highestLabel);
+    delay(500);
+
+    Serial1.write(highestScore);
     delay(500);
   }
 }

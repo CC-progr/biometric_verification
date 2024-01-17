@@ -1,10 +1,10 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 
-#define wifi_ssid "Ruben" // "PapitaC"
-#define wifi_password "123456789" // "wpgr3523"
+#define wifi_ssid "Ruben" // "PapitaC" "Ruben"
+#define wifi_password "123456789" // "123456789" "wpgr3523"
 
-#define mqtt_server "192.168.43.149" // rb: "192.168.43.149", ch: "192.168.65.105" 
+#define mqtt_server "192.168.43.105" // rb: "192.168.43.149", ch: "192.168.62.105" 
 #define mqtt_port 1883
 #define mqtt_user "user1"
 #define mqtt_password "1234"
@@ -12,7 +12,6 @@
 #define out_topic_hr "/eps-L1/user/HR"
 #define out_topic_gsr "/eps-L1/user/GSR"
 #define out_topic_pred "/eps-L1/user/prediction"
-#define out_topic_score "/eps-L1/user/score"
 #define in_led 1
 
 #define echoPin 2 // Echo Pin
@@ -94,26 +93,30 @@ void loop() {
   client.loop();
 
   // HR
-  while(!Serial.available()); 
-  long HR = Serial.read();
-  client.publish(out_topic_hr, String(HR).c_str(), true);
+  // while(!Serial.available()); 
+  // long HR = Serial.read();
+  // client.publish(out_topic_hr, String(HR).c_str(), true);
+
+  // HR
+  int receivedIntHR = 0;
+  while (Serial.available() < sizeof(int));
+  Serial.readBytes((byte*)&receivedIntHR, sizeof(receivedIntHR));
+
+  char intStringHR[40];
+  snprintf(intStringHR, sizeof(intStringHR), "%d", receivedIntHR);
+  client.publish(out_topic_hr, intStringHR, true);
  
   // GSR
-  int receivedInt = 0;
+  int receivedIntGSR = 0;
   while (Serial.available() < sizeof(int));
-  Serial.readBytes((byte*)&receivedInt, sizeof(receivedInt));
+  Serial.readBytes((byte*)&receivedIntGSR, sizeof(receivedIntGSR));
 
-  char intString[40];
-  snprintf(intString, sizeof(intString), "%d", receivedInt);
-  client.publish(out_topic_gsr, intString, true);
+  char intStringGSR[40];
+  snprintf(intStringGSR, sizeof(intStringGSR), "%d", receivedIntGSR);
+  client.publish(out_topic_gsr, intStringGSR, true);
 
   // PREDICT
   while(!Serial.available());
   String prediction = Serial.readString();
   client.publish(out_topic_pred, prediction.c_str(), true);
-
-  // SCORE
-  while(!Serial.available());
-  long score = Serial.read();
-  client.publish(out_topic_score, String(score).c_str(), true);
 }

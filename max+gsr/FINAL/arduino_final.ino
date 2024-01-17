@@ -101,16 +101,13 @@ void loop()
     //Take 25 sets of samples before calculating the heart rate.
     for (byte i = 75; i < 100; i++)
     {
-      // while (particleSensor.available() == false) // Do we have new data?
-      //   particleSensor.check(); // Check the sensor for new data
-
-      //Blink onboard LED with every data read
+      // Blink onboard LED with every data read
       digitalWrite(readLED, !digitalRead(readLED));
 
       redBuffer[i] = particleSensor.getRed();
       irBuffer[i] = particleSensor.getIR();
       particleSensor.nextSample(); 
-      //We're finished with this sample so move to next sample
+      // We're finished with this sample so move to next sample
     }
 
     //After gathering 25 new samples recalculate HR and SP02
