@@ -1,4 +1,4 @@
-FROM python:3
+FROM python:3.10
 RUN mkdir script
 WORKDIR script
 ADD requirements.txt requirements.txt

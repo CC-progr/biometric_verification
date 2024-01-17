@@ -1,15 +1,15 @@
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 
-#define wifi_ssid "MIWIFI_DFf6"
-#define wifi_password "XTHtkbtK"
+#define wifi_ssid "Ruben"
+#define wifi_password "123456789"
 
-#define mqtt_server "192.168.1.136"
+#define mqtt_server "192.168.43.105"
 #define mqtt_port 1883
 #define mqtt_user "user1"
 #define mqtt_password "1234"
 
-#define out_topic "/location/sensor2"
+#define out_topic "/eps-L1/location/sensor1"
 #define in_led 1
 
 #define echoPin 2 // Echo Pin
@@ -84,7 +84,7 @@ void loop() {
   }
   client.loop();
   client.publish(out_topic, String(get_distance()).c_str(), true);
-  delay(1000);
+  delay(10000);
 }
 
 long get_distance(){
